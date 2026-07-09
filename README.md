@@ -1,226 +1,99 @@
-🌐 Languages: [󠁧󠁢󠁥󠁮󠁧󠁿**English**](README.md) | [**Русский**](README.ru.md)
+# DnsConf — блокируем трекеры, не блокируем себе жизнь
 
-[![oosmetrics](https://api.oosmetrics.com/api/v1/badge/achievement/3187ce37-9f15-4a93-8978-670bf41a42ca.svg)](https://oosmetrics.com/repo/noVibe/DnsConf)<br>
-[![Last Build](../../actions/workflows/github_action.yml/badge.svg?branch=main)](../../actions/workflows/github_action.yml)<br>
+[![Last Build](../../actions/workflows/github_action.yml/badge.svg?branch=main)](../../actions/workflows/github_action.yml)
 
-# DNS Block&Redirect Configurer
+> Хочется adblock на уровне DNS, а не «ещё одно расширение, которое сожрёт RAM».  
+> **DnsConf** настраивает **Block** и **Redirect** правила для **Cloudflare** и **NextDNS**  
+> через GitHub Actions. Нажал push — DNS обновился. Почти магия. Почти.
 
-**Allows to set Redirect and Block rules to your Cloudflare and NextDNS accounts.**
+Готовый прогон через Actions.  
+[Видеогайд](https://www.youtube.com/watch?v=vbAXM_xAL5I) (для тех, кто любит смотреть, а не читать README в 2 ночи).
 
-**Ready-to-run via GitHub Actions.** [Video guide](https://www.youtube.com/watch?v=vbAXM_xAL5I)
-
-## Comparison of Free Plans: NextDNS vs Cloudflare
-
-|                         | NextDNS                                                         | Cloudflare                                                                                                           |
-|-------------------------|-----------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| **DNS Query Limit**     | 300,000 per month                                               | 100,000 per day                                                                                                      |
-| **IPv4 Restrictions**   | DNS queries are limited to a single IP address (can be changed) | DNS queries are strictly limited to a single IP address (automatically assigned by Cloudflare and cannot be changed) |
-| **DoH / DoT / IPv6**    | Unlimited                                                       | Unlimited                                                                                                            |
-| **Setup API Limits**    | 60 requests per minute                                          | Unlimited                                                                                                            |
-| **General Limitations** | None                                                            | Infrastructure is blocked by Roskomnadzor (availability issues in Russia)                                            |
-| **Advantages**          | Built-in ad and tracker blocking options                        | More reliable and fast infrastructure                                                                                |
-
-In summary: if you are located in Russia, **NextDNS** is your only viable option due to Roskomnadzor restrictions.
-
-If you are in another country, **Cloudflare** offers more generous limits on the free plan. Tracker and ad blocking can also
-be enabled by providing a domain blocklist in `BLOCK`, for example: https://small.oisd.nl/domainswild2
-
-## Easy Setup
-
-Use the configurator https://dns-conf-ui.vercel.app in **Quick** mode. It will automatically configure your DNS profile
-and perform all required GitHub setup steps.
-
-You only need to sign in with GitHub and provide **CLIENT_ID** and **AUTH_SECRET**. More details on where to find these
-values here: [Setup credentials](#setup-credentials)
-
-## Standard Setup
-
-[Setup credentials](#setup-credentials)
-
-[Setup profile](#setup-profile)
-
-[Setup data sources](#setup-data-sources)
-
-[Setup exclude redirects (optional)](#setup-exclude-redirects-optional)
-
-[Multiple profiles setup](#multiple-profiles-setup)
-
-[GitHub Actions](#github-actions-setup)
-
----
-## Setup credentials
-
-### NextDNS credentials setup
-
-1) Generate **API KEY**, from https://my.nextdns.io/account and set as **environment variable** `AUTH_SECRET`
-
-2) Click on **NextDNS** logo. On the opened page, copy ID from Endpoints section.
-   Set it as **environment variable** `CLIENT_ID`
-
-
-### Cloudflare credentials setup
-
-1) After signing up into a **Cloudflare**, navigate to _Zero Trust_ tab and create an account.
-
-- Free Plan has decent limits, so just choose it.
-- Skip providing payment method step by choosing _Cancel and exit_ (top right corner)
-- Go back to _Zero Trust_ tab
-
-2) Create a **Cloudflare API token**, from https://dash.cloudflare.com/profile/api-tokens
-
-with 2 permissions:
-
-    Account.Zero Trust : Edit
-
-    Account.Account Firewall Access Rules : Edit
-
-Set API token to **environment variable** `AUTH_SECRET`
-
-3) Get your **Account ID** from : https://dash.cloudflare.com/?to=/:account/workers
-
-Set **Account ID** to **environment variable** `CLIENT_ID`
+> Форк/наследник идей [noVibe/DnsConf](https://github.com/noVibe/DnsConf) — спасибо оригиналу.
 
 ---
 
-## Setup profile
+## NextDNS vs Cloudflare (free) — без розовых очков
 
-Set **environment variable** `DNS` with DNS provider name (**Cloudflare** or **NextDNS**)
+| | NextDNS | Cloudflare |
+|--|---------|------------|
+| **Лимит запросов** | 300k / месяц | 100k / **день** (щедро, пока не РКН) |
+| **IPv4** | один IP (можно сменить) | один IP, прибьёт Cloudflare и «не ной» |
+| **DoH / DoT / IPv6** | безлимит | безлимит |
+| **API setup** | 60 req/min | безлимит |
+| **Реалии РФ** | работает | инфраструктура часто **недоступна** (привет, блокировки) |
 
----
-
-## Setup data sources
-
-Each data source must be a link to a hosts file,
-e.g. https://raw.githubusercontent.com/Internet-Helper/GeoHideDNS/refs/heads/main/hosts/hosts
-
-You can provide multiple sources split by coma:
-https://first.com/hosts,https://second.com/hosts
-
-### 1) Setup Redirects
-
-Set sources to **environment variable** `REDIRECT`
-
-Script will parse sources, filtering out redirects to `0.0.0.0` and `127.0.0.1`
-
-Thus, parsing lines:
-
-    0.0.0.0 domain.to.block
-    1.2.3.4 domain.to.redirect
-    127.0.0.1 another.to.block
-
-will keep only `1.2.3.4 domain.to.redirect` for the further redirect processing.
-
-+ Redirect priority follows sources order. If domain appears more than one time, the first only IP will be applied.
-
-### 2) Setup Blocklist
-
-Set sources to **environment variable** `BLOCK`
-
-Script will parse sources, keeping only redirects to `0.0.0.0`, `127.0.0.1`, `::1`, and also lines containing domain only.
-
-Thus, parsing lines
-
-    1.2.3.4 domain.to.redirect
-    0.0.0.0 domain.to.block
-    127.0.0.1 another.to.block
-    ::1 ipv6.to.block
-    no-ip.just.domain
-
-will keep only 
-
-    domain.to.block
-    another.to.block
-    no-ip.just.domain
-    ipv6.to.block
-for the further block processing.
-
-+ You may want to provide the same source for both `BLOCK` and `REDIRECT` for **Cloudflare**.
-+ For **NextDNS**, the best option might be to set `REDIRECT` only, and then manually choose any blocklists at the
-  _Privacy_ tab.
+**Итог:** в России разумно начинать с **NextDNS**.  
+Cloudflare — если вы не в зоне турбулентности и хотите запас по дневному лимиту.  
+Блоклисты в `BLOCK`, например: https://small.oisd.nl/domainswild2
 
 ---
 
-## Setup exclude redirects (optional)
+## Быстрая настройка
 
-Put domains to **environment variable** `EXCLUDE_REDIRECT` separated by coma, e.g. `instagram.com,twitch.com`
+Конфигуратор: https://dns-conf-ui.vercel.app (режим **Quick**) —  
+подскажет GitHub setup, если не хочется руками.
 
-These domains and their subdomains:
-
-- will be removed from existing redirect rules;
-- won't be added with new ones.
+Нужны **CLIENT_ID** и **AUTH_SECRET** (см. ниже).
 
 ---
 
-## Multiple profiles setup
+## Обычная настройка
 
-### Restrictions
+1. [Учётные данные](#учётные-данные)  
+2. [Профиль](#профиль)  
+3. [Источники данных](#источники)  
+4. [Исключения redirect](#исключения) (опционально)  
+5. [Несколько профилей](#несколько-профилей)  
+6. [GitHub Actions](#github-actions)  
 
-All profiles get _similar_ settings. That means `BLOCK`, `REDIRECT` and `EXCLUDE_REDIRECT` are **shared**.
+Подробности по шагам — в оригинальной документации репозитория / UI;  
+логика та же: секреты в Actions → workflow пишет правила в DNS-провайдер.
 
-### Multiple profiles of single provider
+### Учётные данные
 
-Put your profiles separated by coma **without whitespace** into related **environment variables**.
-E.g., two NextDNS profiles must be set as shown:
+Секреты репозитория (Settings → Secrets):
 
-- `AUTH_SECRET` has: `secret_NextDns_1,secret_NextDns_2`
-- `CLIENT_ID` has `client_id_NextDns_1,client_id_NextDns_2`
+- токены Cloudflare / NextDNS  
+- `CLIENT_ID` / `AUTH_SECRET` для UI-флоу  
 
-### Multiple profiles of different providers
+**Не коммитьте ключи.** GitHub их запомнит. Интернет — тоже, если промахнётесь.
 
-In addition to setting above, list provider for each profile in **environment variable** `DNS`. For example:
+### Профиль
 
-- `DNS` has: `NEXTDNS,CLOUDFLARE,NEXTDNS`
-- `AUTH_SECRET` has: `secret_NextDns_1,secret_Cloudflare_1,secret_NextDns_2`
-- `CLIENT_ID` has `client_id_NextDns_1,client_id_Cloudflare_1,client_id_NextDns_2`
+Один DNS-профиль = один «личность» (дом / телефон / «я в отпуске и хочу меньше рекламы»).
 
----
+### Источники
 
-## Script Behaviour
+Списки доменов для block/redirect. Чем агрессивнее список — тем чаще «почему не открывается банк».  
+Держите exclude под рукой. Будущее-я скажет спасибо.
 
-### Cloudflare
+### Исключения
 
-Previously generated data will be removed. Script recognizes old data by marks:
+Домены, которые **нельзя** редиректить/резать.  
+Да, туда часто попадает то, без чего «интернет сломался».
 
-+ Name prefix for List: **_Blocked websites by script_** and **_Override websites by script_**
-+ Name prefix for Rule: **_Rules set by script_**
-+ Different **_Session id_**. **_Session id_** is stored in a description field.
+### Несколько профилей
 
-After removing old data, new lists and rules will be generated and applied.
+Можно. Не обязательно в первый день. Сначала заставьте один профиль врать меньше.
 
-If you want to clear **Cloudflare** block/redirect settings, launch the script without providing sources in related *
-*environment variables**. E.g. providing no value for **environment variable** `BLOCK` will cause removing old related
-data: lists and rules used to setup blocks.
+### GitHub Actions
 
-### NextDNS
-
-For `REDIRECT`:
-
-+ Existing domain will be updated if redirect IP has changed
-+ If new domains are provided, they will be added
-+ The rest redirect settings are kept untouched
-
-For `BLOCK`:
-
-+ If new domains are provided, they will be added
-+ The rest block settings are kept untouched
-
-Previously generated data is removed **ONLY** when both `BLOCK` and `REDIRECT` sources were not provided.
+Workflow на push/schedule гоняет конфиг.  
+Упал билд — DNS не обновился. Это фича: лучше старые правила, чем пустой профиль.
 
 ---
 
-## GitHub Actions setup
+## Философия
 
-#### Step-by-step video guide: [REDIRECT for NextDNS](https://www.youtube.com/watch?v=vbAXM_xAL5I)
+DNS-level blocking — компромисс между «чистый интернет» и «сайт банка внезапно 404».  
+DnsConf не обещает идеал. Обещает **воспроизводимый** способ крутить правила как код.
 
-#### Steps
+---
 
-1) Fork repository
-2) Go _Settings_ => _Environments_
-3) Create _New environment_ with name `DNS`
-4) Provide `AUTH_SECRET` and `CLIENT_ID` to **Environment secrets**
-5) Provide `DNS`,`REDIRECT`, `BLOCK` and `EXCLUDE_REDIRECT` to **Environment variables**
+## Контакты (мейнтейнер форка/адаптации)
 
-+ The action will be launched every day at **01:30 UTC**. To set another time, change cron at
-  `.github/workflows/github_action.yml`
-+ You can run the action manually via `Run workflow` button: switch to _Actions_ tab and choose workflow named **DNS
-  Block&Redirect Configurer cron task**
+**[r0meo1.ru](https://r0meo1.ru)** · [@r0meo1](https://t.me/r0meo1)
+
+Если нужен полный EN-оригинал — смотрите upstream / историю коммитов.  
+Этот README — на русском, потому что блокировки у нас тоже на русском.
