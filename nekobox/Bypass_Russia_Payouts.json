@@ -1,0 +1,28 @@
+[
+  {
+    "action": "hijack-dns",
+    "protocol": "dns"
+  },
+  {
+    "action": "route",
+    "ip_is_private": true,
+    "outbound": "direct"
+  },
+  {
+    "action": "route",
+    "domain_suffix": [
+      "travelpayouts.com"
+    ],
+    "outbound": "direct"
+  },
+  {
+    "action": "route",
+    "outbound": "direct",
+    "rule_set": [
+      "geoip-ru",
+      "geosite-ru",
+      "geosite-category-ru",
+      "geosite-ru-available-only-inside"
+    ]
+  }
+]
