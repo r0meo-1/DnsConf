@@ -31,6 +31,9 @@ jobs:
           with urllib.request.urlopen(upstream, timeout=30) as response:
               rules = json.load(response)
 
+          direct_domains = {"travelpayouts.com", "emrldco.com"}
+          direct_suffixes = {"travelpayouts.com", ".travelpayouts.com", "emrldco.com", ".emrldco.com"}
+
           def is_travelpayouts_rule(rule):
               if not isinstance(rule, dict):
                   return False
@@ -38,18 +41,14 @@ jobs:
                   return False
               domains = set(rule.get("domain", []))
               suffixes = set(rule.get("domain_suffix", []))
-              return (
-                  "travelpayouts.com" in domains
-                  or "travelpayouts.com" in suffixes
-                  or ".travelpayouts.com" in suffixes
-              )
+              return bool(domains & direct_domains or suffixes & direct_suffixes)
 
           rules = [rule for rule in rules if not is_travelpayouts_rule(rule)]
 
           travelpayouts_rule = {
               "action": "route",
-              "domain": ["travelpayouts.com"],
-              "domain_suffix": [".travelpayouts.com"],
+              "domain": ["travelpayouts.com", "emrldco.com"],
+              "domain_suffix": [".travelpayouts.com", ".emrldco.com"],
               "outbound": "direct",
           }
 
