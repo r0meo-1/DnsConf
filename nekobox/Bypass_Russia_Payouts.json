@@ -11,10 +11,12 @@
   {
     "action": "route",
     "domain": [
-      "travelpayouts.com"
+      "travelpayouts.com",
+      "emrldco.com"
     ],
     "domain_suffix": [
-      ".travelpayouts.com"
+      ".travelpayouts.com",
+      ".emrldco.com"
     ],
     "outbound": "direct"
   },
