@@ -10,8 +10,11 @@
   },
   {
     "action": "route",
-    "domain_suffix": [
+    "domain": [
       "travelpayouts.com"
+    ],
+    "domain_suffix": [
+      ".travelpayouts.com"
     ],
     "outbound": "direct"
   },
