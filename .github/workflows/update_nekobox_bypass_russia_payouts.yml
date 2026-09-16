@@ -1,0 +1,78 @@
+name: Update NekoBox Bypass Russia + Payouts
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nekobox-bypass-russia-payouts
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download upstream and add Travelpayouts DIRECT rule
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import pathlib
+          import urllib.request
+
+          upstream = "https://raw.githubusercontent.com/qr243vbi/ruleset/routeprofiles/Bypass_Russia.json"
+          with urllib.request.urlopen(upstream, timeout=30) as response:
+              rules = json.load(response)
+
+          def is_travelpayouts_rule(rule):
+              return (
+                  isinstance(rule, dict)
+                  and rule.get("action") == "route"
+                  and rule.get("outbound") == "direct"
+                  and "travelpayouts.com" in rule.get("domain_suffix", [])
+              )
+
+          rules = [rule for rule in rules if not is_travelpayouts_rule(rule)]
+
+          travelpayouts_rule = {
+              "action": "route",
+              "domain_suffix": ["travelpayouts.com"],
+              "outbound": "direct",
+          }
+
+          insert_at = len(rules)
+          for index, rule in enumerate(rules):
+              if isinstance(rule, dict) and "rule_set" in rule:
+                  insert_at = index
+                  break
+
+          rules.insert(insert_at, travelpayouts_rule)
+
+          output = pathlib.Path("nekobox/Bypass_Russia_Payouts.json")
+          output.parent.mkdir(parents=True, exist_ok=True)
+          output.write_text(
+              json.dumps(rules, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Commit updated profile when needed
+        shell: bash
+        run: |
+          if git diff --quiet -- nekobox/Bypass_Russia_Payouts.json; then
+            echo "No upstream changes"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add nekobox/Bypass_Russia_Payouts.json
+          git commit -m "chore: update NekoBox Bypass Russia + Payouts"
+          git push
