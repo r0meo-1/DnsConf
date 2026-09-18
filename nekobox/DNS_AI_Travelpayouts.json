@@ -1,0 +1,55 @@
+{
+  "servers": [
+    {
+      "type": "hosts",
+      "tag": "ai-bootstrap",
+      "predefined": {
+        "dns.dns-ai.ru": [
+          "192.144.59.14",
+          "186.246.49.127",
+          "2a0d:8480:0:67c::14",
+          "2a0a:2b41:0:500d::53"
+        ]
+      }
+    },
+    {
+      "type": "https",
+      "tag": "remote",
+      "server": "dns.dns-ai.ru",
+      "server_port": 443,
+      "path": "/dns-query",
+      "domain_resolver": "ai-bootstrap",
+      "detour": "direct",
+      "tls": {
+        "enabled": true,
+        "server_name": "dns.dns-ai.ru"
+      }
+    },
+    {
+      "type": "https",
+      "tag": "payouts-dns",
+      "server": "1.1.1.1",
+      "server_port": 443,
+      "path": "/dns-query",
+      "detour": "proxy",
+      "tls": {
+        "enabled": true,
+        "server_name": "cloudflare-dns.com"
+      }
+    }
+  ],
+  "rules": [
+    {
+      "domain": [
+        "travelpayouts.com"
+      ],
+      "domain_suffix": [
+        ".travelpayouts.com"
+      ],
+      "action": "route",
+      "server": "payouts-dns"
+    }
+  ],
+  "final": "remote",
+  "independent_cache": true
+}
