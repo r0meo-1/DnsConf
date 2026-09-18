@@ -19,7 +19,6 @@
       "server_port": 443,
       "path": "/dns-query",
       "domain_resolver": "ai-bootstrap",
-      "detour": "direct",
       "tls": {
         "enabled": true,
         "server_name": "dns.dns-ai.ru"
@@ -35,6 +34,42 @@
       "tls": {
         "enabled": true,
         "server_name": "cloudflare-dns.com"
+      }
+    },
+    {
+      "type": "https",
+      "tag": "dns-direct",
+      "server": "dns.dns-ai.ru",
+      "server_port": 443,
+      "path": "/dns-query",
+      "domain_resolver": "ai-bootstrap",
+      "tls": {
+        "enabled": true,
+        "server_name": "dns.dns-ai.ru"
+      }
+    },
+    {
+      "type": "https",
+      "tag": "dns-remote",
+      "server": "dns.dns-ai.ru",
+      "server_port": 443,
+      "path": "/dns-query",
+      "domain_resolver": "ai-bootstrap",
+      "tls": {
+        "enabled": true,
+        "server_name": "dns.dns-ai.ru"
+      }
+    },
+    {
+      "type": "https",
+      "tag": "direct",
+      "server": "dns.dns-ai.ru",
+      "server_port": 443,
+      "path": "/dns-query",
+      "domain_resolver": "ai-bootstrap",
+      "tls": {
+        "enabled": true,
+        "server_name": "dns.dns-ai.ru"
       }
     }
   ],

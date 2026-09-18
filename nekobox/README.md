@@ -13,6 +13,10 @@ sing-box 1.13.19 core (typed DNS servers, supported since 1.12).
   TLS certificate verification for dns.dns-ai.ru. No plaintext DNS bootstrap.
 - Cloudflare uses 1.1.1.1 with verified TLS name cloudflare-dns.com.
 - No global Cloudflare fallback. Unrelated domains keep DNS AI filtering.
+- Resolver aliases `dns-direct`, `dns-remote`, and `direct` also use DNS AI.
+  NekoBox-generated outbound resolver references require these tags. Typed HTTPS
+  servers connect directly by default; an explicit detour to an empty direct
+  outbound is invalid at runtime and is intentionally omitted.
 
 ## Install / Установка
 
@@ -32,9 +36,12 @@ object. A change here requires pasting the new object again.
 
 ## Verification and limits
 
-The installed core accepted a temporary full configuration containing this DNS
-object and placeholder direct/proxy outbounds. This verifies parsing and server
-references; it does not test the active VLESS proxy, UI import or live site login.
+The installed core accepted and started a temporary full configuration containing
+this DNS object, a direct outbound, an unused SOCKS proxy placeholder and an
+explicit default/outbound resolver reference to `dns-direct`. The temporary core
+had no listening inbound or TUN and was stopped after startup. This verifies
+parsing and service initialization; it does not test the active VLESS proxy,
+UI import or live site login.
 Default DNS AI returned 0.0.0.0 for travelpayouts.com and passport.travelpayouts.com
 before this exception. Recheck live resolution after importing and restarting.
 
