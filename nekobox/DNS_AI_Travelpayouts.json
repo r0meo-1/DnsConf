@@ -76,10 +76,17 @@
   "rules": [
     {
       "domain": [
-        "travelpayouts.com"
+        "travelpayouts.com",
+        "tp.media",
+        "tp.st",
+        "emrldco.com",
+        "travelpayouts.github.io"
       ],
       "domain_suffix": [
-        ".travelpayouts.com"
+        ".travelpayouts.com",
+        ".tp.media",
+        ".tp.st",
+        ".emrldco.com"
       ],
       "action": "route",
       "server": "payouts-dns"

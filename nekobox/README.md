@@ -7,7 +7,17 @@ routing for Travelpayouts and emrldco. It does not install DNS settings.
 sing-box 1.13.19 core (typed DNS servers, supported since 1.12).
 
 - Default: DNS AI DoH, directly connected so DNS AI sees the local region.
-- Only travelpayouts.com and its subdomains: Cloudflare DoH through `proxy`.
+- Travelpayouts service domains: Cloudflare DoH through the existing `proxy`.
+  This is a DNS-only exception; it does not add or change traffic routing rules.
+- `travelpayouts.com` and all its subdomains cover the website, dashboard,
+  passport/login, API, support, academy, widgets and email-link hosts.
+- `tp.media` and its subdomains cover affiliate redirects and widget scripts;
+  `tp.st` and its subdomains cover short affiliate links.
+- `emrldco.com` and its subdomains retain DNS coverage for the legacy redirect
+  domain already present in the existing routing profile.
+- The exact host `travelpayouts.github.io` covers the official Data API reference.
+  Other GitHub Pages sites do not match this exception. External brand websites
+  and third-party login/CDN services continue using their existing settings.
 - Both A and AAAA queries follow the same exception; no query-type restriction.
 - DNS AI endpoint bootstrap uses the published IPv4/IPv6 addresses locally, with
   TLS certificate verification for dns.dns-ai.ru. No plaintext DNS bootstrap.
@@ -28,6 +38,10 @@ sing-box 1.13.19 core (typed DNS servers, supported since 1.12).
 5. Click **Проверка форматирования**, then **OK**. Keep default DNS tag `remote`.
 6. Save all parent dialogs, stop and start the connection, then reopen Travelpayouts.
 
+For a DNS-only update, leave **routing** unchanged. Do not import or update
+`Bypass_Russia_Payouts.json` as part of these instructions. The DNS object expects
+your current configuration to have an outbound tagged `proxy`, as before.
+
 Raw file:
 https://raw.githubusercontent.com/r0meo-1/DnsConf/main/nekobox/DNS_AI_Travelpayouts.json
 
@@ -42,12 +56,19 @@ explicit default/outbound resolver reference to `dns-direct`. The temporary core
 had no listening inbound or TUN and was stopped after startup. This verifies
 parsing and service initialization; it does not test the active VLESS proxy,
 UI import or live site login.
-Default DNS AI returned 0.0.0.0 for travelpayouts.com and passport.travelpayouts.com
-before this exception. Recheck live resolution after importing and restarting.
 
-Windows currently has a separate hosts override for app.travelpayouts.com. This
-repository change does not remove it, and the OS/browser may consult it first.
-If access still fails, inspect that override and browser DNS cache separately.
+On 2026-09-30, the expanded object passed `check` and reached `sing-box started`
+with the installed 1.13.19 core in this same isolated setup. Separate direct
+Cloudflare DoH checks returned nonzero A records for dashboard, login, API,
+support, email-link, widget, short-link, legacy redirect and API documentation
+hosts. These requests verify the resolver's answers, not the active proxy path.
+The system resolver returned `0.0.0.0` for `api.travelpayouts.com`, and the
+homepage failed to resolve before applying the update. Recheck live access
+after importing and restarting; no live NekoBox settings were edited here.
+
+If access still fails, inspect Windows hosts overrides and browser DNS cache
+separately. The OS/browser may consult a hosts override first. This DNS-only
+repository change does not edit Windows hosts, system DNS or browser settings.
 
 To revert, restore the backed-up DNS object or turn off the custom DNS-object
 checkbox and restore both normal DNS fields to https://dns.dns-ai.ru/dns-query.
@@ -58,3 +79,6 @@ References:
 - https://sing-box.sagernet.org/configuration/dns/server/https/
 - https://sing-box.sagernet.org/configuration/dns/server/hosts/
 - https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/
+- https://support.travelpayouts.com/hc/en-us/articles/26856689805586
+- https://support.travelpayouts.com/hc/en-us/articles/12729746524050
+- https://travelpayouts.github.io/slate/
